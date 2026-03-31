@@ -19,7 +19,9 @@ import android.hardware.usb.UsbConstants;
 public class Main extends LinearOpMode {
     @Override
     public void runOpMode() {
-        VisualPathMouseReader mouse = new VisualPathMouseReader((Activity) hardwareMap.appContext);
+        VisualPathMouseReader mouse = new VisualPathMouseReader((Activity) hardwareMap.appContext, 420);
+
+        VisualPathVirtualField field = new VisualPathVirtualField(new double[]{20, 20}, new double[]{0, 0});
 
         if (!mouse.start()) {
             telemetry.addLine("Mouse not found — check USB connection.");
@@ -28,8 +30,7 @@ public class Main extends LinearOpMode {
             return;
         }
 
-        telemetry.addData("Mouse", mouse.getDeviceName());
-        telemetry.addLine("Ready.");
+        telemetry.addLine("Using Mouse: " + mouse.getDeviceName());
         telemetry.update();
 
         waitForStart();
@@ -37,11 +38,25 @@ public class Main extends LinearOpMode {
         while (opModeIsActive()) {
             int[] delta = mouse.consumeDelta();
 
-            telemetry.addData("dX", delta[0]);
-            telemetry.addData("dY", delta[1]);
+            double dx = 0;
+            double dy = 0;
+
+            try {
+                dx = mouse.convertDeltaToInch(delta[0]);
+                dy = mouse.convertDeltaToInch(delta[1]);
+            } catch (Exception ignored) {}
+
+            telemetry.addData("dX", dx);
+            telemetry.addData("dY", dy);
+
+            field.shiftRobotPosition(dx, dy);
+
+            telemetry.addData("Field Position X", field.getRobotPosition()[0]);
+            telemetry.addData("Field Position Y", field.getRobotPosition()[1]);
+
             telemetry.update();
 
-            sleep(0);
+            sleep(20);
         }
 
         mouse.stop();

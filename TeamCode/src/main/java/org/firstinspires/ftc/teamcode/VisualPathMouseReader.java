@@ -53,6 +53,9 @@ public class VisualPathMouseReader {
     private boolean invertX = false;
     private boolean invertY = false;
 
+    private double sensorDPI;
+    private boolean usingSensorDPI = false;
+
     // -------------------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------------------
@@ -66,6 +69,16 @@ public class VisualPathMouseReader {
 
     /**
      * @param activity The FTC OpMode's activity context (cast hardwareMap.appContext).
+     * @param sensorDPI The DPI of the sensor being used, required for getting measurement conversions.
+     */
+    public VisualPathMouseReader(Activity activity, double sensorDPI) {
+        usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+        this.sensorDPI = sensorDPI;
+        this.usingSensorDPI = true;
+    }
+
+    /**
+     * @param activity The FTC OpMode's activity context (cast hardwareMap.appContext).
      * @param invertX Pass true to invert deltaX on consumption.
      * @param invertY Pass true to invert deltaY on consumption.
      */
@@ -73,6 +86,20 @@ public class VisualPathMouseReader {
         usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
         this.invertX = invertX;
         this.invertY = invertY;
+    }
+
+    /**
+     * @param activity The FTC OpMode's activity context (cast hardwareMap.appContext).
+     * @param invertX Pass true to invert deltaX on consumption.
+     * @param invertY Pass true to invert deltaY on consumption.
+     * @param sensorDPI The DPI of the sensor being used, required for getting measurement conversions.
+     */
+    public VisualPathMouseReader(Activity activity, boolean invertX, boolean invertY, double sensorDPI) {
+        usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+        this.invertX = invertX;
+        this.invertY = invertY;
+        this.sensorDPI = sensorDPI;
+        this.usingSensorDPI = true;
     }
 
     // -------------------------------------------------------------------------
@@ -154,8 +181,22 @@ public class VisualPathMouseReader {
     }
 
     // -------------------------------------------------------------------------
+    // Movement Converters
+    // -------------------------------------------------------------------------
+
+    /**
+     * @param value The raw delta value on either x/y.
+     * @return A measurement in inches based on DPI.
+     */
+    public double convertDeltaToInch(int value) throws Exception {
+        if (this.usingSensorDPI) return (double) value / this.sensorDPI;
+        else throw new Exception("No sensor DPI provided.");
+    }
+
+    // -------------------------------------------------------------------------
     // Internal Device Discovery
     // -------------------------------------------------------------------------
+
     private boolean findMouseDevice() {
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         for (UsbDevice device : deviceList.values()) {
