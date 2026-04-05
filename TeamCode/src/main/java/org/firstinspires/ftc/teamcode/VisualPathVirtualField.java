@@ -1,5 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.content.res.AssetManager;
+
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -55,6 +63,74 @@ public class VisualPathVirtualField {
     // Manipulators
     // -------------------------------------------------------------------------
 
+    public void readElementJSON() throws IOException {
+        AssetManager assetManager = AppUtil.getInstance().getApplication().getAssets();
+
+        StringBuilder raw = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(assetManager.open("elements.json"))
+        )) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                raw.append(line.trim());
+            }
+        }
+
+        Dictionary<double[], double[]> elements = new Hashtable<>();
+
+        String content = raw.toString().trim();
+
+        content = content.substring(1, content.length() - 1);
+
+        int depth = 0;
+        int start = 0;
+
+        for (int i = 0; i < content.length(); i++) {
+            char c = content.charAt(i);
+
+            if (c == '{') {
+                if (depth++ == 0) start = i;
+            } else if (c == '}') {
+                if (--depth == 0) {
+                    String obj = content.substring(start, i + 1);
+
+                    double[] position = extractArray(obj, "position");
+                    double[] size = extractArray(obj, "size");
+
+                    if (position == null || size == null) {
+                        throw new IOException("Malformed element: " + obj);
+                    }
+
+                    elements.put(position, size);
+                }
+            }
+        }
+
+        this.elements = elements;
+    }
+
+    private static double[] extractArray(String obj, String key) {
+        String marker = "\"" + key + "\"";
+        int keyIdx = obj.indexOf(marker);
+        if (keyIdx == -1) return null;
+
+        int arrStart = obj.indexOf('[', keyIdx);
+        int arrEnd = obj.indexOf(']', arrStart);
+        if (arrStart == -1 || arrEnd == -1) return null;
+
+        String[] parts = obj.substring(arrStart + 1, arrEnd).split(",");
+        double[] result = new double[parts.length];
+        try {
+            for (int i = 0; i < parts.length; i++) {
+                result[i] = Double.parseDouble(parts[i].trim());
+            }
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return result;
+    }
+
     public void setRobotPosition(double[] robotPosition) {
         this.robotPosition = robotPosition;
     }
@@ -74,5 +150,9 @@ public class VisualPathVirtualField {
 
     public double[] getFieldSize() {
         return fieldSize;
+    }
+
+    public Dictionary<double[], double[]> getElements() {
+        return elements;
     }
 }

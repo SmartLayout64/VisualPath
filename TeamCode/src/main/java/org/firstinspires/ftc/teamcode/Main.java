@@ -22,6 +22,7 @@ public class Main extends LinearOpMode {
         VisualPathMouseReader mouse = new VisualPathMouseReader((Activity) hardwareMap.appContext, 420);
 
         VisualPathVirtualField field = new VisualPathVirtualField(new double[]{20, 20}, new double[]{0, 0});
+        try {field.readElementJSON(); telemetry.addLine(field.getElements().toString());} catch (Exception e) {telemetry.addLine(e.toString());}
 
         if (!mouse.start()) {
             telemetry.addLine("Mouse not found — check USB connection.");
