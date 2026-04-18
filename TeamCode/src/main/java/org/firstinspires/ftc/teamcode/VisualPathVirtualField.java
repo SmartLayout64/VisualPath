@@ -14,8 +14,7 @@ import java.util.Hashtable;
 /**
  * VisualPathVirtualField
  *
- * A simple 2D matrix wrapper intended to be used to simulate a field for
- * VisualPath.
+ * A simple field virtualizer for VisualPath
  *
  * Usage:
  * Create a new field with the width, length, and initial position, to then
@@ -63,6 +62,9 @@ public class VisualPathVirtualField {
     // Manipulators
     // -------------------------------------------------------------------------
 
+    /**
+     * Reads 'elements.json' stored in assets to quickly import elements
+     */
     public void readElementJSON() throws IOException {
         AssetManager assetManager = AppUtil.getInstance().getApplication().getAssets();
 
@@ -131,6 +133,9 @@ public class VisualPathVirtualField {
         return result;
     }
 
+    /**
+     * @param robotPosition The new robot position as [x, y]
+     */
     public void setRobotPosition(double[] robotPosition) {
         this.robotPosition = robotPosition;
     }
@@ -144,14 +149,23 @@ public class VisualPathVirtualField {
     // Accessors
     // -------------------------------------------------------------------------
 
+    /**
+     * @return The robot position as [x, y]
+     */
     public double[] getRobotPosition() {
         return this.robotPosition;
     }
 
+    /**
+     * @return The field size as [length, width]
+     */
     public double[] getFieldSize() {
         return fieldSize;
     }
 
+    /**
+     * @return A Dictionary<double[], double[]> with the positions (top-left corner) and dimensions of all elements as {[x, y], [length, width]}
+     */
     public Dictionary<double[], double[]> getElements() {
         return elements;
     }
